@@ -1,0 +1,8 @@
+services:
+  simple-web:
+    stdin_open: true
+    tty: true
+    ports:
+      - 80:80
+    image: yeasy/simple-web:latest
+networks: {}
