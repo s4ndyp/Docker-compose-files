@@ -1,0 +1,62 @@
+services:
+  budget-board-server:
+    container_name: budget-board-server
+    restart: unless-stopped
+    image: ghcr.io/teelur/budget-board/server:release
+    build: ./server
+    environment:
+      Logging__LogLevel__Default: Information
+      CLIENT_URL: budget-board-client
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: budget-board-db
+      POSTGRES_DATABASE: budgetboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: superSecretPassword
+      AUTO_UPDATE_DB: true
+      DISABLE_NEW_USERS: false
+    networks:
+      - budget-board-network
+    depends_on:
+      budget-board-db:
+        condition: service_healthy
+  budget-board-client:
+    container_name: budget-board-client
+    restart: unless-stopped
+    image: ghcr.io/teelur/budget-board/client:release
+    build: ./client
+    environment:
+      VITE_API_URL: budget-board-client
+      PORT: 6253
+    ports:
+      - 6253:6253
+    networks:
+      - budget-board-network
+    depends_on:
+      - budget-board-server
+  budget-board-db:
+    container_name: postgres-db
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: superSecretPassword
+      POSTGRES_DB: budgetboard
+    ports:
+      - 6252:5432
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - budget-board-network
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d budgetboard
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data: null
+networks:
+  budget-board-network:
+    name: budget-board-network
+    driver: bridge
