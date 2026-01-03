@@ -1,22 +1,17 @@
 services:
-  mongo:
-    image: mongo:6.0
-    container_name: mongo
-    restart: always
-    volumes:
-      - mongo-data:/data/db
-  app:
-    # VERVANG DIT DOOR JOUW IMAGE URL (zie stap 4)
-    # Let op: alles in kleine letters!
-    image: ghcr.io/s4ndyp/taskey:latest
-    container_name: app
+  taskey:
+    # GEBRUIK DE LOKAAL GEBOUWDE IMAGE
+    image: ghcr.io/s4ndyp/taskey:beta
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     ports:
-      - 80:3000
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/taskey
-    depends_on:
-      - mongo
-volumes:
-  mongo-data: null
-networks: {}
+      # Poort 80 (Nginx Frontend) is extern toegankelijk
+      - "80:80"       
+      # Optioneel: Poort 3001 voor debugging van de upload server
+      - "3001:3001"   
+    volumes:
+      # Koppel de lokale 'uploads' map. Dit is cruciaal voor persistentie.
+      # Binnen de container is het pad /app/uploads
+      - ./uploads:/app/uploads
